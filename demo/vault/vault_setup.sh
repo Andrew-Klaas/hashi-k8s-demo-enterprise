@@ -24,10 +24,6 @@ vault operator unseal $(cget unseal-key)
 export ROOT_TOKEN=$(cget root-token)
 vault login $ROOT_TOKEN
 
-#write license for ADP module
-vault write sys/license text=$1
-
-
 #Create admin user
 echo '
 path "*" {
@@ -72,19 +68,6 @@ vault write lob_a/workshop/database/roles/workshop-app \
 vault secrets enable -path=lob_a/workshop/transit transit
 vault write -f lob_a/workshop/transit/keys/customer-key
 vault write -f lob_a/workshop/transit/keys/archive-key
-
-#transform
-vault secrets enable transform
-vault write transform/role/ssns transformations=ssn-fpe
-vault write transform/transformation/ssn-fpe \
-  type=fpe \
-  template=builtin/socialsecuritynumber \
-  tweak_source=internal \
-  allowed_roles=ssns
-
-#ciphertext=$(vault write transform/encode/ssns value=123456789)
-#vault write transform/decode/ssns value=$ciphertext
-
 
 #Create Vault policy used by Nomad job
 cat << EOF > transit-app-example.policy
@@ -161,5 +144,3 @@ creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}'
 ALTER USER \"{{name}}\" WITH SUPERUSER;" \
 default_ttl="1h" \
 max_ttl="24h"
-
-vault read database/creds/my-role
